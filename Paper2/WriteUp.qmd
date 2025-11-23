@@ -1,0 +1,27 @@
+---
+title: "How Unit Count and Stories Impact Lot Value"
+author: "Ziheng (Tony) Fang"
+format: pdf
+editor: visual
+---
+
+## Abstract
+
+For properties on the real estate market, one can expect that the larger the lot size, the larger the market value of the property. However, would the relationship between lot size and market value on how a unit increase in the lot size impacts the market value be impacted by the total number of units the property contains and the number of stories the property hosts? Some in the real estate industry would wonder if having more residential units or a higher building would increase or decrease the value of the land the property is built on. Data regarding total assessed value of different residential properties was studied from real estate data provided by the Assessor's Office in San Francisco. Methods utilized included building a regression model, studying the interaction effects, and running a hypothesis test for the interaction effects.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
