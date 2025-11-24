@@ -45,8 +45,6 @@ housing_data <- subset(housing_data, Use.Code %in% c("MRES", "SRES"))
 #drop rows with missing data
 housing_data <- subset(housing_data, Lot.Area > 0 & !is.na(Lot.Area) & !is.na(Number.of.Units) & !is.na(Number.of.Stories) & !is.na(Number.of.Bedrooms) & !is.na(Number.of.Rooms))
 
-set.seed(123)
-housing_sample <- housing_data[sample(nrow(housing_data), 50000), ]
 
 #fit the model
-model <- lm(AssessedValue ~ Year.Property.Built + Lot.Area*Number.of.Units + Lot.Area*Number.of.Stories + Number.of.Bedrooms + Number.of.Rooms, data=housing_sample)
+model <- lm(AssessedValue ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_data)
