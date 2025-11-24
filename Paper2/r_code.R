@@ -1,4 +1,6 @@
 library(stringr)
+library(dplyr)   # for %>% and summarise()
+library(knitr)   # for kable() to format tables
 #Read in CSV
 housing_data <- read.csv("Assessor_Historical_Secured_Property_Tax_Rolls_20251122.csv")
 
@@ -48,3 +50,26 @@ housing_data <- subset(housing_data, Lot.Area > 0 & !is.na(Lot.Area) & !is.na(Nu
 
 #fit the model
 model <- lm(AssessedValue ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_data)
+
+#create summary statistics
+housing_data %>%
+  summarise(
+    Mean_Assessed_Value   = mean(AssessedValue, na.rm = TRUE),
+    Assessed_Value_SD     = sd(AssessedValue, na.rm = TRUE),
+    MinAssessedValue    = min(AssessedValue, na.rm = TRUE),
+    MaxAssessedValue    = max(AssessedValue, na.rm = TRUE),
+    Mean_LotArea = mean(Lot.Area, na.rm = TRUE),
+    LotArea_SD   = sd(Lot.Area, na.rm = TRUE),
+    Min_LotArea  = min(Lot.Area, na.rm = TRUE),
+    Max_LotArea  = max(Lot.Area, na.rm = TRUE),
+    Mean_NumberOfUnits = mean(Number.of.Units, na.rm= TRUE),
+    NumberOfUnits_SD = sd(Number.of.Units, na.rm=TRUE),
+    Min_NumberOfUnits = min(Number.of.Units, na.rm=TRUE),
+    Max_NumberOfUnits = max(Number.of.Units, na.rm=TRUE),
+    Mean_NumberOfStories = mean(Number.of.Stories, na.rm=TRUE),
+    NumberOfStories_SD = sd(Number.of.Stories, na.rm=TRUE),
+    Min_NumberOfStories = min(Number.of.Stories, na.rm=TRUE),
+    Max_NumberOfStores = max(Number.of.Stories, na.rm=TRUE)
+  ) %>%
+  t() %>%
+  kable(col.names = c("Value"))
