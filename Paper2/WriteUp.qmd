@@ -112,8 +112,66 @@ housing_data %>%
 
 ## Methods
 
+We started off by fitting a linear regression model based on the dataset using the lm() function in R [@RLanguage]. The original model is as follows:
+
+$$
+Y_{i} = \beta_{0} + \beta_{1}X_{i1} + \beta_{2}X_{i2}X_{i1} + \beta_{3}X_{i1}X_{i2} + \epsilon_{i}
+$$
+
+In the original regression model, our predictor variables include the lot area of a property ($X_{i1}$), the number of units ($X_{i2}$), and the number of stories ($X_{i3}$). The response variable (Y) is the total assessed value of that property. The intercept ($\beta_{0}$) represents the hypothetical assessed value of a property that has a lot area of 0 sq. ft, 0 units, and 0 stories. The coefficient for lot area ($\beta_{1}$) represents the change in assessed value per unit increase in lot area. The coefficient $\beta_{2}$ represents the interaction effect between lot area and the number of units, or the change in the effect of lot area for every extra unit in a property. The coefficient $\beta_{3}$ represents the interaction effect between lot area and the number of stories, or the change in the effect of lot area for every extra story in a property. We also have an error term, $\epsilon_{i}$ which includes variations in assessed value that are not influenced by our predictor variables.
+
+However, upon examining the residual vs. fitted values plot, we can observe heteroskedasticity, reflecting unequal variance among the error terms, which makes our hypothesis tests off. To address this, we applied a log transformation to the response variable, where the transformed model shows substantially more constant variance.
+
+The transformed model is as follows:
+
+$log(Y_{i} + 1) = \beta_{0} + \beta_{1}X_{i1} + \beta_{2}X_{i2}X_{i1} + \beta_{3}X_{i3}X_{i1} + \epsilon_{i}$
+
+In our transformed model, our predictor and response variables remain the same. However, when it comes to our coefficients, the intercept ($\beta_{0}$) represents the predicted log-assessed value when all other predictors are equal to 0, which is not realistic in our context, the coefficient for lot area ($\beta_{1}$) represents the percentage change in the assessed value for a unit increase in lot area when all other predictors are 0, the coefficient for the interaction effect between lot area and the number of units ($\beta_{2}$) represents the percentage change in the percentage change in assessed value per unit increase in lot area for every extra unit in the property, and the coefficient for the interaction effect between lot area and the number of stories ($\beta_{3}$) represents the change in the percentage change in assessed value per unit increase in lot area for every extra story in the property.
+
+A limitation we still have is that while the log transformation reduced the heteroskedasticity in a substantial amount, some heteroskedasticity remains, particularly at the more extreme values. This would mean that the hypothesis tests using the p-values might still be slightly off.
+
 ## Results
 
+For each coefficient ($\beta_{1}$, $\beta_{2}$, $\beta_{3}$), we ran a t-test as our hypothesis test.
+
+For $\beta_{1}$, which represents the percentage change in assessed value per unit increase in lot area, we had a null hypothesis $H_{0}$, which assumed $\beta_{1}$ to be equal to 0. This would indicate that there is no relationship between lot area and the assessed value. Our alternative hypothesis, $H_{a}$, would assume that $\beta_{1}$ was not equal to 0, indicating a relationship between lot area and assessed value. The test statistic we used was:
+
+$$
+t=\frac{b_{1} - 0}{SE(b_{1})}
+$$
+
+We observed a p-value of less than $2 * 10^{-16}$, which leads us to reject the null hypothesis. Observing an estimated coefficient of $-3.022 * 10^{-6}$, we can estimate that an extra square foot in lot size leads to a decrease in assessed value by $-3.022 * 10^{-4}$%, which is marginal.
+
+For $\beta_{2}$, which represents the change in the percentage change in assessed value per extra square foot of lot area for each extra unit in the building, we also had a null hypothesis $H_{0}$, which assumed $\beta_{2}$ to be equal to 0. This would indicate that the rate of change in the assessed value per extra square foot in lot area is not affected by extra units in the property. In contrast, the alternative hypothesis $H_{a}$, would assume that $\beta_{2}$ is not equal to 0, indicating that the rate of change in the assessed value per extra square foot in lot area is affected by extra units in the property. The test statistic we used was:
+
+$$
+t=\frac{b_{2} - 0}{SE(b_{2})}
+$$
+
+We observed a p-value of less than $4.05 * 10^{-12}$, which leads us to reject the null hypothesis. Observing an estimated coefficient of $-6.352 * 10^{-9}$, we can estimate that each extra unit inside a property leads to the percentage change in the assessed value per extra square foot in lot area to decrease by $-6.352 * 10^{-7}$%.
+
+For $\beta_{3}$, which represents the change in the percentage change in assessed value per extra square foot of lot area for each extra story in the building, we also had a null hypothesis $H_{0}$, which assumed $\beta_{3}$ to be equal to 0. This would indicate that the rate of change in the assessed value per extra square foot in lot area is not affected by extra stories in the building. Whereas, our alternative hypothesis $H_{a}$, would assume that $\beta_{3}$ is not equal to 0, indicating that the rate of change in assessed value per unit increase in lot area is impacted by an additional story. The test statistic we used was:
+
+$$
+t = \frac{b_{2} - 0}{SE(b_{2})}
+$$
+
+We observed a p-value of less than $2 * 10^{-16}$, which leads us to reject the null hypothesis. Observing an estimated coefficient of $1.53 * 10^{-6}$, we can estimate that each extra story on a property leads to the percentage change in the assessed value per extra square foot in lot area to increase by $1.53 * 10^{-4}$%.
+
 ## Discussion
+
+To look into how common methods used to efficiently use land for housing can impact how an additional square foot of lot area affects the assessed value of housing properties in San Francisco, we analyzed 2378663 residential units. The total assessed value was considered to be the response variable of lot area, as the predictor variable, with units inside the property and the story count of the property as interaction affects.
+
+To determine how additional units in square feet of lot area impacted the assessed value, and how additional units inside the property and additional stories affected the impact lot area had on the assessed value, we ran a t-test as our hypothesis test with a test size of 0.05. For each respective coefficient, we considered a null hypothesis which would indicate that there is no relation between that particular predictor variable and the assessed value or that a particular variable had no impact on how an additional unit of another predictor variable affected the assessed value. The alternative hypothesis would conclude that a particular predictor variable did have an impact on the assessed value or that a particular variable did impact how another variable affected the assessed value through an interaction affect. The estimated coefficients would then tell us about how much of an affect that predictor variable had on the assessed value or how much a variable affected another variable's impact on the assessed value through an interaction affect.
+
+Looking into how an additional square foot of lot area affects the assessed value, we observe a p-value that is significantly smaller than our test size. Thus, we reject the null hypothesis and conclude that the lot area is related to the assessed value of a property. The estimated coefficient also tells us that considering no units inside a property and no stories, we can expect the assessed value to decrease by 0.0003022% for every square foot of lot area.
+
+When we consider how additional units inside a building would impact how each additional square foot in lot area affects the assessed value, we observe a p-value that is also significantly smaller than our test size. In this case, we also reject the null hypothesis and conclude that the number of units a property has will impact how each additional square feet in lot area affects the assessed value. The estimated coefficient tells us that considering no stories, every extra unit inside a building will decrease the change in assessed value per additional square foot in lot area by 0.0000006352%.
+
+If we were to consider how additional stories to a building would impact how each additional square foot in lot area affects the assessed value, by looking at the p-value, we also observe a value that is significantly smaller than our test size. From that we would reject the null hypothesis and conclude that the number of stories a property has will impact how each additional square feet in lot area affects the assessed value. The estimated coefficient tells us that considering no units, every extra story on a building will increase the change in assessed value per additional square foot in lot area by 0.000153%.
+
+For a developer looking into how they can efficiently utilize land while also maximizing profit in real estate, this study would suggest that by building taller buildings will not only be an efficient use of land, but will have a positive effect on how each additional square foot of lot area used affects the assessed value. On the other hand, while having multiple units inside a building can save land area, it would have a negative effect on how each additional square foot of lot area used affects the assessed value.
+
+However, this research has a limitation that the dataset used only contains properties in San Francisco, an urban city with significant population density. In an urban area, it can be reasonable to see that a taller building might positively affect how an additional square foot of lot area impacts the assessed value, simply because we are trying to save space. However, in more rural areas, many homeowners might prefer their property to be on one story. To make our findings more conclusive for properties regardless of location, we could take samples of real estate properties in urban, suburban, and rural areas.
 
 ## References

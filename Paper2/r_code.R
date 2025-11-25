@@ -50,6 +50,7 @@ housing_data <- subset(housing_data, Lot.Area > 0 & !is.na(Lot.Area) & !is.na(Nu
 
 #fit the model
 model <- lm(AssessedValue ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_data)
+model_log <- lm(log1p(AssessedValue) ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_data)
 
 #create summary statistics
 housing_data %>%
@@ -73,3 +74,9 @@ housing_data %>%
   ) %>%
   t() %>%
   kable(col.names = c("Value"))
+
+#residual vs. fitted values
+plot(model, which=1)
+
+#residual vs. fitted values log
+plot(model_log, which=1)
