@@ -15,7 +15,7 @@ For properties on the real estate market, one may expect that the larger the lot
 
 In many urban areas across the country, the population is extremely dense, making land among one of the most scarcest and valuable resources for real estate developers. In the eyes of a developer, how efficiently land is utilized, whether it's having multiple units in one property or multiple stories in a unit, significantly impacts the city's housing supply. In cities like San Francisco, where housing is limited and prices are up, land use is a significant problem that city leaders want to address. On top of supply, understanding how lot area would interact with the number of units inside a property or the number of stories a unit has can provide additional insights on how efficient land use can actually have an impact on property value in the eyes of a potential homeowner. From this our hypothesis test in this study, we can also see that contrary to the belief that increases in lot area would increase the assessed value, the two variables are actually not related.
 
-Prior research often examined how the prices of property are predicted by direct predictors such as the lot area, room count, bedroom count, etc. However, these studies very rarely address how variables regarding efficient land use, such has having multiple units in a building and multiple stories in a unit could impact how our predictors affect property value. In reality, many of these variables are interdependent whereas while we could utilize land more efficiently by having a residential unit with multiple floors and having multiple residential units in one building, in the eyes of a property owner, the value per unit of lot size may also change significantly.
+Prior research often examined how the prices of property are predicted by direct predictors such as the lot area, room count, bedroom count, etc. However, these studies very rarely address how variables regarding efficient land use, such has having multiple units in a building and multiple stories in a unit could impact how our predictors affect property value. In reality, many of these variables are interdependent indicating that while we could utilize land more efficiently by having a residential unit with multiple floors and having multiple residential units in one building, in the eyes of a property owner, the value per unit of lot size may also change significantly.
 
 This paper uses data from the San Francisco Assessor-Recorder office to see how property values are impacted not only by the lot area, but by how the number of units inside a property and the number of stories per unit impacts how lot area affects property values. A multiple linear regression model was utilized to examine both the direct effect of lot area on the assessed value and how the unit count and story count affects the impact lot area has on the assessed value through the interaction effect.
 
@@ -25,7 +25,7 @@ The Data section gives further details on data that was utilized for this paper.
 
 ## Data
 
-The data set used for this paper, Assessor Historical Secured Property Tax Rolls [@SFRealEstateData], provides details such as the assessed values, lot area, number of units, number of stories, and more for properties within the city of San Francisco since 2016. The data was compiled by the city assessor's office. We have a total of 3.72M observations in the original dataset where each observation represents a real estate property. Variables that used for the response variable in our study included Assessed.Fixtures.Value, Assessed.Improvement.Value, Assessed.Land.Value, and Assessed.Personal.Property.Value, which were summed up into the AssessedValue. Variables used as our predictor variables included Lot.Area, Number.of.Units, and Number.of.Stores. To allow numerical computations, all commas were removed. Since clients look for very different features when on the market for residential and commercial properties, we only kept data on single family residential and multiple family residential units.
+The data set used for this paper, Assessor Historical Secured Property Tax Rolls [@SFRealEstateData], provides details such as the assessed values, lot area, number of units, number of stories, and more for properties within the city of San Francisco since 2016. The data was compiled by the city assessor's office. We have a total of 3.72M observations in the original dataset where each observation represents a real estate property. A sample of 50k observations were taken from the original dataset to adress computational limitations while still being large enough for stable coefficient estimates. Variables that used for the response variable in our study included Assessed.Fixtures.Value, Assessed.Improvement.Value, Assessed.Land.Value, and Assessed.Personal.Property.Value, which were summed up into the AssessedValue. Variables used as our predictor variables included Lot.Area, Number.of.Units, and Number.of.Stores. To allow numerical computations, all commas were removed. Since clients look for very different features when on the market for residential and commercial properties, we only kept data on single family residential and multiple family residential units.
 
 ```{r}
 #| echo: false
@@ -81,8 +81,12 @@ housing_data <- subset(housing_data, Use.Code %in% c("MRES", "SRES"))
 #drop rows with missing data
 housing_data <- subset(housing_data, Lot.Area > 0 & !is.na(Lot.Area) & !is.na(Number.of.Units) & !is.na(Number.of.Stories) & !is.na(Number.of.Bedrooms) & !is.na(Number.of.Rooms))
 
+#take sample
+set.seed(123)
+housing_sample <- housing_data[sample(nrow(housing_data), 50000), ]
+
 #create summary statistics
-housing_data %>%
+housing_sample %>%
   summarise(
     Mean_Assessed_Value   = mean(AssessedValue, na.rm = TRUE),
     Assessed_Value_SD     = sd(AssessedValue, na.rm = TRUE),
@@ -107,7 +111,15 @@ housing_data %>%
 ```
 
 ```{r}
+#| echo: false
+#| message: false
+#fit the model
+model <- lm(AssessedValue ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_sample)
+model_log <- lm(log1p(AssessedValue) ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_sample)
 
+#wls
+w <- 1/(resid(model_log)^2)
+model_wls <- lm(log1p(AssessedValue) ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_sample, weights = w)
 ```
 
 ## Methods
@@ -122,13 +134,37 @@ In the original regression model, our predictor variables include the lot area o
 
 However, upon examining the residual vs. fitted values plot, we can observe heteroskedasticity, reflecting unequal variance among the error terms, which makes our hypothesis tests off. To address this, we applied a log transformation to the response variable, where the transformed model shows substantially more constant variance.
 
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-cap: "Residual vs. Fitted Values in original model. Observe extreme heteroskedasticity."
+#| fig-width: 7
+#| fig-height: 5
+
+#residual vs. fitted values
+plot(model, which=1)
+```
+
 The transformed model is as follows:
 
-$log(Y_{i} + 1) = \beta_{0} + \beta_{1}X_{i1} + \beta_{2}X_{i2}X_{i1} + \beta_{3}X_{i3}X_{i1} + \epsilon_{i}$
+$$log(Y_{i} + 1) = \beta_{0} + \beta_{1}X_{i1} + \beta_{2}X_{i2}X_{i1} + \beta_{3}X_{i3}X_{i1} + \epsilon_{i}$$
 
 In our transformed model, our predictor and response variables remain the same. However, when it comes to our coefficients, the intercept ($\beta_{0}$) represents the predicted log-assessed value when all other predictors are equal to 0, which is not realistic in our context, the coefficient for lot area ($\beta_{1}$) represents the percentage change in the assessed value for a unit increase in lot area when all other predictors are 0, the coefficient for the interaction effect between lot area and the number of units ($\beta_{2}$) represents the percentage change in the percentage change in assessed value per unit increase in lot area for every extra unit in the property, and the coefficient for the interaction effect between lot area and the number of stories ($\beta_{3}$) represents the change in the percentage change in assessed value per unit increase in lot area for every extra story in the property.
 
-A limitation we still have is that while the log transformation reduced the heteroskedasticity in a substantial amount, some heteroskedasticity remains, particularly at the more extreme values. This would mean that the hypothesis tests using the p-values might still be slightly off.
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| fig-cap: "Residuals vs. fitted values in log transformed model. Observe reduced heteroskedasticity."
+#| fig-width: 7
+#| fig-height: 5
+
+#residual vs fitted. values
+plot(model_log, which=1)
+```
+
+As indicated by figure 2, heteroskedasticity remains in the log model, while significantly reduced. To further address the issue on heteroskedasticity, a weighted least squares (WLS) model was also implemented. However, based on the residuals vs. fitted values plot, the improvement was negligible. Thus, a limitation we still have is that the remaining heteroskedasticity is likely from the structural features of the data, which may include non-linear relationships, particularly at the more extreme values. This would mean that the hypothesis tests using the p-values might still be slightly off.
 
 ## Results
 
