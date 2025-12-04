@@ -1,6 +1,7 @@
 library(stringr)
 library(dplyr)   # for %>% and summarise()
 library(knitr)   # for kable() to format tables
+library(np)
 #Read in CSV
 housing_data <- read.csv("Assessor_Historical_Secured_Property_Tax_Rolls_20251122.csv")
 
@@ -47,20 +48,16 @@ housing_data <- subset(housing_data, Use.Code %in% c("MRES", "SRES"))
 #drop rows with missing data
 housing_data <- subset(housing_data, Lot.Area > 0 & !is.na(Lot.Area) & !is.na(Number.of.Units) & !is.na(Number.of.Stories) & !is.na(Number.of.Bedrooms) & !is.na(Number.of.Rooms))
 
-#take sample
-set.seed(123)
-housing_sample <- housing_data[sample(nrow(housing_data), 50000), ]
+#filter out one year
+housing_data <- housing_data %>%
+  filter(Closed.Roll.Year == 2024)
 
 #fit the model
-model <- lm(AssessedValue ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_sample)
-model_log <- lm(log1p(AssessedValue) ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_sample)
-
-#wls
-w <- 1/(resid(model_log)^2)
-model_wls <- lm(log1p(AssessedValue) ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_sample, weights = w)
+model <- lm(AssessedValue ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_data)
+model_log <- lm(log1p(AssessedValue) ~ Lot.Area + Lot.Area:Number.of.Units + Lot.Area:Number.of.Stories, data=housing_data)
 
 #create summary statistics
-housing_sample %>%
+housing_data %>%
   summarise(
     Mean_Assessed_Value   = mean(AssessedValue, na.rm = TRUE),
     Assessed_Value_SD     = sd(AssessedValue, na.rm = TRUE),
@@ -88,5 +85,3 @@ plot(model, which=1)
 #residual vs. fitted values log
 plot(model_log, which=1)
 
-#residual vs. fitted values wls
-plot(model_wls, which=1)
